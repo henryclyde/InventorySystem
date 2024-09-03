@@ -1,0 +1,83 @@
+﻿@model InventoryViewModel
+@{
+    ViewData["Title"] = "Home Page";
+}
+
+<div class="row">
+    <div class="col-md-2">
+        <form asp-action="Filter" method="post">
+            <div class="mb-3">
+                <label class="form-label">Category:</label>
+                <select name="filter" class="form-select"
+                        asp-items="@(new SelectList(Model.Categories,
+                    "CategoryId", "Name", Model.Filters.CategoryId))">
+                    <option value="all">All</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Date Checked:</label>
+                <select name="filter" class="form-select"
+                        asp-items="@(new SelectList(Model.DateCheckedFilters,
+                    "Key", "Value", Model.Filters.DateChecked))">
+                    <option value="all">All</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Status:</label>
+                <select name="filter" class="form-select"
+                        asp-items="@(new SelectList(Model.Statuses,
+                    "StatusId", "Name", Model.Filters.StatusId))">
+                    <option value="all">All</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary">Filter</button>
+            <a asp-action="Index" asp-route-id="" class="btn btn-primary">Clear</a>
+        </form>
+    </div>
+    <div class="col-md-10">
+
+        <form asp-action="MarkComplete" method="post"
+              asp-route-id="@Model.Filters.FilterString">
+
+            <table class="table table-bordered table-striped mt-2">
+                <thead>
+                    <tr>
+                        <th>Description</th>
+                        <th>Category</th>
+                        <th>Date Checked</th>
+                        <th>Status</th>
+                        <th class="w-25"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (Inventory inventory in Model.Inventories)
+                    {
+                        string overdue = inventory.Overdue ? "bg-warning" : "";
+                        string late = inventory.Overdue ? "(Item marked as inaccurate and 20 days have passed since checked.)" : "";
+
+                        <tr>
+                            <td>@inventory.ProductName</td>
+                            <td>@inventory.Category.Name</td>
+                            <td class="@overdue">@inventory.DateChecked.ToString("MM/dd/yyyy")</td>
+                            <td class="@overdue">@inventory.Status.Name<br>@late</td>
+                            <td>
+                                @if (inventory.StatusId == "notacc")
+                                {
+                                    <button type="submit" class="btn btn-success btn-sm"
+                                            name="@nameof(inventory.InventoryId)" value="@inventory.InventoryId">
+                                        Mark Accurate
+                                    </button>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </form>
+        <form asp-action="DeleteComplete" method="post"
+              asp-route-id="@Model.Filters.FilterString">
+            <a asp-action="Add" class="btn btn-primary">Add New Inventory Item</a>
+            <button type="submit" class="btn btn-danger">Delete ALL Accurate Inventory</button>
+        </form>
+    </div>
+</div>
